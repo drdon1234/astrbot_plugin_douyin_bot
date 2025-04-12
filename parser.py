@@ -62,24 +62,22 @@ class DouyinParser:
         urls = self.extract_video_links(input_text)
         async with aiohttp.ClientSession() as session:
             tasks = [self.parse(session, url) for url in urls]
-            results = await asyncio.gather(*tasks)
-
-            for url, result in zip(urls, results):
-                if result:
-                    print(f"URL: {url}")
-                    print(f"作者：{result['nickname']}")
-                    print(f"标题：{result['title']}")
-                    print(f"发布时间：{result['timestamp']}")
-                    print(f"视频直链：{result['video_url']}\n\n")
-                    return result['video_url']
-                else:
-                    print(f"解析失败！URL: {url}")
-        return None
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for result in results:
+                if result and not isinstance(result, Exception):
+                    return result
+            return None
+        
 
 async def main():
     input_text = "9.71 a@a.nQ 02/11 Slp:/ # 肯恰那  https://v.douyin.com/5JJ_ZvXkGz0/ 复制此链接，打开Dou音搜索，直接观看视频！ https://www.douyin.com/video/7488299765604666682 https://v.douyin.com/T_0KMeulp7A/  https://v.douyin.com/t_ToZGLYIBk"
     parser = DouyinParser()
-    await parser.parse_urls(input_text)
+    result = await parser.parse_urls(input_text)
+    # print(f"URL: {url}")
+    # print(f"作者：{result['nickname']}")
+    # print(f"标题：{result['title']}")
+    # print(f"发布时间：{result['timestamp']}")
+    # print(f"视频直链：{result['video_url']}\n\n")
 
 if __name__ == "__main__":
     asyncio.run(main())
