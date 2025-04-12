@@ -14,6 +14,15 @@
 https://github.com/drdon1234/astrbot_plugin_douyin_bot
 ```
 
+## 依赖库安装（重要！）
+
+使用前请先安装以下依赖库：
+- aiohttp
+在您的终端输入以下命令并回车：
+```
+pip install aiohttp
+```
+
 ---
 ## 使用建议
 - 建议在 "AstrBot WebUI" 中打开 "回复时引用消息" 功能
