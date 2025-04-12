@@ -15,6 +15,10 @@ https://github.com/drdon1234/astrbot_plugin_douyin_bot
 ```
 
 ---
+## 使用建议
+- 建议在 "AstrBot WebUI" 中打开 "回复时引用消息" 功能
+
+---
 ## 开发中的功能
 
 - 适配微信
