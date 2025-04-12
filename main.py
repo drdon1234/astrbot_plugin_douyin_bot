@@ -6,7 +6,7 @@ from .parser import DouyinParser
 
 @register("astrbot_plugin_douyin_bot", "drdon1234", "自动解析抖音视频链接转换为直链发送", "1.0")
 class DouyinBotPlugin(Star):
-    def __init__(self, context: Context, config: dict):
+    def __init__(self, context: Context):
         super().__init__(context)
         self.parser = DouyinParser()
     
