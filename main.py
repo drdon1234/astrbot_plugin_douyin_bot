@@ -12,24 +12,35 @@ class DouyinBotPlugin(Star):
     
     @filter.event_message_type(EventMessageType.ALL)
     async def auto_parse(self, event: AstrMessageEvent):
-        direct_url = await self.parser.parse_urls(event.message_str or "")
-        if direct_url:
-            nodes = []
-            self_id = 
+        results = await self.parser.parse_urls(event.message_str)
+        if results
+        nodes = [
+            uploader.Plain(f"抖音bot为您服务")
+        ]
+        sender_name = "抖音bot"
+        sender_id = int(event.get_self_id()) or 10000
+        for url, result in results:
             nodes.append(
                 Comp.Node(
-                    name = "抖音bot",
-                    uin = int(event.get_self_id()) or 10000,
+                    name = sender_name,
+                    uin = sender_id,
                     content = [
-                        uploader.Plain(f"视频直链是 {direct_url}"),
-                        Comp.Image.fromFileSystem(img_path)
+                        uploader.Plain(f"视频链接：{url}\n标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
                     ]
                 )
             )
-            yield event.chain_result([
-              uploader.Plain(f"视频直链是 {direct_url}"),
-              uploader.Video.fromURL(direct_url)
-            ])
+            nodes.append(
+                Comp.Node(
+                    name = sender_name,
+                    uin = sender_id,
+                    content = [
+                        uploader.Video.fromURL(result['video_url'])
+                    ]
+                )
+            )
+        yield event.chain_result([nodes])
+              
+              
             
     async def terminate(self):
         pass
