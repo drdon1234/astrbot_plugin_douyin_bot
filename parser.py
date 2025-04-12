@@ -71,8 +71,10 @@ class DouyinParser:
                     print(f"标题：{result['title']}")
                     print(f"发布时间：{result['timestamp']}")
                     print(f"视频直链：{result['video_url']}\n\n")
+                    return result['video_url']
                 else:
                     print(f"解析失败！URL: {url}")
+        return None
 
 async def main():
     input_text = "9.71 a@a.nQ 02/11 Slp:/ # 肯恰那  https://v.douyin.com/5JJ_ZvXkGz0/ 复制此链接，打开Dou音搜索，直接观看视频！ https://www.douyin.com/video/7488299765604666682 https://v.douyin.com/T_0KMeulp7A/  https://v.douyin.com/t_ToZGLYIBk"
