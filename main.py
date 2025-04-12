@@ -14,6 +14,18 @@ class DouyinBotPlugin(Star):
     async def auto_parse(self, event: AstrMessageEvent):
         direct_url = await self.parser.parse_urls(event.message_str or "")
         if direct_url:
+            nodes = []
+            self_id = 
+            nodes.append(
+                Comp.Node(
+                    name = "抖音bot",
+                    uin = int(event.get_self_id()) or 10000,
+                    content = [
+                        uploader.Plain(f"视频直链是 {direct_url}"),
+                        Comp.Image.fromFileSystem(img_path)
+                    ]
+                )
+            )
             yield event.chain_result([
               uploader.Plain(f"视频直链是 {direct_url}"),
               uploader.Video.fromURL(direct_url)
