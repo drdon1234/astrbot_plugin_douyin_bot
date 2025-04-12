@@ -12,10 +12,11 @@ class DouyinBotPlugin(Star):
     
     @filter.event_message_type(EventMessageType.ALL)
     async def auto_parse(self, event: AstrMessageEvent):
-        print(event.message_str)
-        direct_url = await self.parser.parse_urls(event.message_str)
+        direct_url = await self.parser.parse_urls(event.message_str or "")
         if direct_url:
-            uploader.Video.fromURL(direct_url)
-        
+            yield event.chain_result([
+              uploader.Video.fromURL(direct_url)
+            ])
+            
     async def terminate(self):
         pass
