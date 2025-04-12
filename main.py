@@ -1,6 +1,6 @@
 from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
 from astrbot.api.star import Context, Star, register
-import astrbot.api.message_components as uploader
+import astrbot.api.message_components as Uploader
 from astrbot.core.star.filter.event_message_type import EventMessageType
 from .parser import DouyinParser
 
@@ -16,7 +16,7 @@ class DouyinBotPlugin(Star):
         if direct_url:
             print(direct_url)
             yield event.chain_result([
-              uploader.Video.fromURL(direct_url)
+              Uploader.Video.fromURL(direct_url)
             ])
             
     async def terminate(self):
