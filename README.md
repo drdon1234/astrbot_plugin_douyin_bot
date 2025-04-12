@@ -27,4 +27,4 @@ https://github.com/drdon1234/astrbot_plugin_douyin_bot
 ---
 ## 鸣谢
 
-视频信息的抓取方法来自博客: https://blog.csdn.net/qq_53153535/article/details/141297614
+视频信息抓取方法来自博客: https://blog.csdn.net/qq_53153535/article/details/141297614
