@@ -7,8 +7,8 @@ from pathlib import Path
 import random
 
 
-@register("astrbot_plugin_showme_xjj", "drdon1234", "随机小姐姐美图短视频", "1.1")
-class randomXJJPlugin(Star):
+@register("astrbot_plugin_douyin_bot", "drdon1234", "将用户发送的抖音链接转换为视频直链并发送", "1.0")
+class DouyinBotPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
         self.config = load_config(Path(__file__).parent / "config.yaml")
