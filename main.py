@@ -1,6 +1,6 @@
 from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
 from astrbot.api.star import Context, Star, register
-import astrbot.api.message_components as uploader
+from astrbot.api.message_components import Plain, Video, Node, Nodes
 from astrbot.core.star.filter.event_message_type import EventMessageType
 from .parser import DouyinParser
 
@@ -19,28 +19,34 @@ class DouyinBotPlugin(Star):
         if len(results) == 0:
             return
         nodes = [
-            uploader.Plain(f"抖音bot为您服务 ٩( 'ω' )و")
+            Node(
+                name=sender_name,
+                uin=sender_id,
+                content=[
+                    Plain(f"抖音bot为您服务 ٩( 'ω' )و")
+                ]
+            )
         ]
         sender_name = "抖音bot"
         sender_id = int(event.get_self_id()) or 10000
         for result in results:
             if result and not isinstance(result, Exception):
                 nodes.append(
-                    uploader.Node(
+                    Node(
                         name = sender_name,
                         uin = sender_id,
                         content = [
-                            uploader.Plain(f"视频链接：{result['raw_url']}\n标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
+                            Plain(f"视频链接：{result['raw_url']}\n标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
                         ]
                     )
                 )
                 nodes.append(
-                    uploader.Node(
+                    Node(
                         name = sender_name,
                         uin = sender_id,
                         content = [
-                            uploader.Video.fromURL(result['video_url'])
+                            Video.fromURL(result['video_url'])
                         ]
                     )
                 )
-        yield event.chain_result([uploader.Nodes(nodes)])
+        yield event.chain_result([Nodes(nodes)])
