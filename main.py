@@ -43,7 +43,7 @@ class DouyinBotPlugin(Star):
                         )
                     )
             yield event.chain_result([
-                Plain("抖音bot为您服务 ٩( 'ω' )و")
+                Plain("抖音bot为您服务 ٩( 'ω' )و"),
                 Nodes(nodes)
             ])
         except Exception as e:
