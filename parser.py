@@ -34,7 +34,8 @@ class DouyinParser:
                         'nickname': nickname,
                         'title': title,
                         'timestamp': timestamp,
-                        'video_url': video_url,
+                        'raw_url': url,
+                        'video_url': video_url
                     }
                 else:
                     return None
@@ -62,12 +63,8 @@ class DouyinParser:
         urls = self.extract_video_links(input_text)
         async with aiohttp.ClientSession() as session:
             tasks = [self.parse(session, url) for url in urls]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            for result in results:
-                if result and not isinstance(result, Exception):
-                    return result
-            return None
-        
+            return await asyncio.gather(*tasks)
+
 
 async def main():
     input_text = "9.71 a@a.nQ 02/11 Slp:/ # 肯恰那  https://v.douyin.com/5JJ_ZvXkGz0/ 复制此链接，打开Dou音搜索，直接观看视频！ https://www.douyin.com/video/7488299765604666682 https://v.douyin.com/T_0KMeulp7A/  https://v.douyin.com/t_ToZGLYIBk"
