@@ -24,8 +24,6 @@ class DouyinBotPlugin(Star):
             sender_id = int(event.get_self_id()) or 10000
             for result in results:
                 if result and not isinstance(result, Exception):
-                    yield event.plain_result(f"标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
-                    yield event.plain_result(result['video_url'])
                     nodes.append(
                         Node(
                             name=sender_name,
@@ -45,8 +43,6 @@ class DouyinBotPlugin(Star):
                         )
                     )
             yield event.plain_result("抖音bot为您服务 ٩( 'ω' )و")
-            yield event.chain_result([
-                Nodes(nodes)
-            ])
+            yield event.chain_result([Nodes(nodes)])
         except Exception as e:
             print(f"处理消息时发生错误：{e}")
