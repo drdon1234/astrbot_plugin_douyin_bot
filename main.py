@@ -15,38 +15,45 @@ class DouyinBotPlugin(Star):
     
     @filter.event_message_type(EventMessageType.ALL)
     async def auto_parse(self, event: AstrMessageEvent):
-        results = await self.parser.parse_urls(event.message_str)
-        if len(results) == 0:
-            return
-        nodes = [
-            Node(
-                name=sender_name,
-                uin=sender_id,
-                content=[
-                    Plain(f"抖音bot为您服务 ٩( 'ω' )و")
-                ]
-            )
-        ]
-        sender_name = "抖音bot"
-        sender_id = int(event.get_self_id()) or 10000
-        for result in results:
-            if result and not isinstance(result, Exception):
-                nodes.append(
-                    Node(
-                        name = sender_name,
-                        uin = sender_id,
-                        content = [
-                            Plain(f"视频链接：{result['raw_url']}\n标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
-                        ]
-                    )
+        try:
+            results = await self.parser.parse_urls(event.message_str)
+            if len(results) == 0:
+                return
+            
+            sender_name = "抖音bot"
+            sender_id = int(event.get_self_id()) or 10000
+            
+            nodes = [
+                Node(
+                    name=sender_name,
+                    uin=sender_id,
+                    content=[
+                        Plain(f"抖音bot为您服务 ٩( 'ω' )و")
+                    ]
                 )
-                nodes.append(
-                    Node(
-                        name = sender_name,
-                        uin = sender_id,
-                        content = [
-                            Video.fromURL(result['video_url'])
-                        ]
+            ]
+            
+            for result in results:
+                if result and not isinstance(result, Exception):
+                    nodes.append(
+                        Node(
+                            name=sender_name,
+                            uin=sender_id,
+                            content=[
+                                Plain(f"视频链接：{result['raw_url']}\n标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
+                            ]
+                        )
                     )
-                )
-        yield event.chain_result([Nodes(nodes)])
+                    nodes.append(
+                        Node(
+                            name=sender_name,
+                            uin=sender_id,
+                            content=[
+                                Video.fromURL(result['video_url'])
+                            ]
+                        )
+                    )
+            
+            yield event.chain_result([Nodes(nodes)])
+        except Exception as e:
+            print(f"处理消息时发生错误：{e}")
