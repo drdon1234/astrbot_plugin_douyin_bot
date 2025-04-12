@@ -1,5 +1,5 @@
 name: astrbot_plugin_douyin_bot
-desc: 自动解析抖音视频链接转换为直链发送
+desc: 自动识别抖音链接并转换为视频直链
 help: None
 version: v1.0
 author: drdon1234
