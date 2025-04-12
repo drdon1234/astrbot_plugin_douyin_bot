@@ -1,5 +1,5 @@
 name: astrbot_plugin_douyin_bot
-desc: 随机小姐姐美图短视频
+desc: 自动解析抖音视频链接转换为直链发送
 help: None
 version: v1.0
 author: drdon1234
