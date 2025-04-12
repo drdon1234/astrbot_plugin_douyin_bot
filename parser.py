@@ -45,13 +45,16 @@ class DouyinParser:
 
     async def parse(self, session, url):
         async with self.semaphore:
-            redirected_url = await self.get_redirected_url(session, url)
-            match = re.search(r'(\d+)', redirected_url)
-            if match:
-                video_id = match.group(1)
-                return await self.fetch_video_info(session, video_id)
-            else:
-                return None
+            try:
+                redirected_url = await self.get_redirected_url(session, url)
+                match = re.search(r'(\d+)', redirected_url)
+                if match:
+                    video_id = match.group(1)
+                    return await self.fetch_video_info(session, video_id)
+                else:
+                    return None
+            except aiohttp.ClientError as e:
+                return e
 
     @staticmethod
     def extract_video_links(input_text):
@@ -63,7 +66,7 @@ class DouyinParser:
         urls = self.extract_video_links(input_text)
         async with aiohttp.ClientSession() as session:
             tasks = [self.parse(session, url) for url in urls]
-            return await asyncio.gather(*tasks)
+            return await asyncio.gather(*tasks, return_exceptions=True)
 
 
 async def main():
