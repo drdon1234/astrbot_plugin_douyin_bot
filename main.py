@@ -1,13 +1,11 @@
 from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
 from astrbot.api.star import Context, Star, register
-from .utils.config_manager import load_config
-from .utils.message_adapter import MessageAdapter
-from .utils.parser import get_url
+from .parser import get_url
 from pathlib import Path
 import random
 
 
-@register("astrbot_plugin_douyin_bot", "drdon1234", "将用户发送的抖音链接转换为视频直链并发送", "1.0")
+@register("astrbot_plugin_douyin_bot", "drdon1234", "自动解析抖音视频链接转换为直链发送", "1.0")
 class DouyinBotPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
