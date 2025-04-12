@@ -9,38 +9,38 @@ class DouyinBotPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
         self.parser = DouyinParser()
+
+    async def terminate(self):
+        pass
     
     @filter.event_message_type(EventMessageType.ALL)
     async def auto_parse(self, event: AstrMessageEvent):
         results = await self.parser.parse_urls(event.message_str)
-        if results
+        if len(results) == 0:
+            return
         nodes = [
-            uploader.Plain(f"抖音bot为您服务")
+            uploader.Plain(f"抖音bot为您服务 ٩( 'ω' )و")
         ]
         sender_name = "抖音bot"
         sender_id = int(event.get_self_id()) or 10000
-        for url, result in results:
-            nodes.append(
-                Comp.Node(
-                    name = sender_name,
-                    uin = sender_id,
-                    content = [
-                        uploader.Plain(f"视频链接：{url}\n标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
-                    ]
+        for result in results:
+            if result and not isinstance(result, Exception):
+                nodes.append(
+                    Comp.Node(
+                        name = sender_name,
+                        uin = sender_id,
+                        content = [
+                            uploader.Plain(f"视频链接：{result['raw_url']}\n标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
+                        ]
+                    )
                 )
-            )
-            nodes.append(
-                Comp.Node(
-                    name = sender_name,
-                    uin = sender_id,
-                    content = [
-                        uploader.Video.fromURL(result['video_url'])
-                    ]
+                nodes.append(
+                    Comp.Node(
+                        name = sender_name,
+                        uin = sender_id,
+                        content = [
+                            uploader.Video.fromURL(result['video_url'])
+                        ]
+                    )
                 )
-            )
         yield event.chain_result([nodes])
-              
-              
-            
-    async def terminate(self):
-        pass
