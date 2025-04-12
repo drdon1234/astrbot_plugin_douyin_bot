@@ -1,4 +1,4 @@
-from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
+from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.api.message_components import Plain, Video, Node, Nodes
 from astrbot.core.star.filter.event_message_type import EventMessageType
