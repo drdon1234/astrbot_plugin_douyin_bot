@@ -43,4 +43,4 @@ class DouyinBotPlugin(Star):
                         ]
                     )
                 )
-        yield event.chain_result([nodes])
+        yield event.chain_result([uploader.Nodes(nodes)])
