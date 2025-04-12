@@ -26,7 +26,7 @@ class DouyinBotPlugin(Star):
         for result in results:
             if result and not isinstance(result, Exception):
                 nodes.append(
-                    Comp.Node(
+                    uploader.Node(
                         name = sender_name,
                         uin = sender_id,
                         content = [
@@ -35,7 +35,7 @@ class DouyinBotPlugin(Star):
                     )
                 )
                 nodes.append(
-                    Comp.Node(
+                    uploader.Node(
                         name = sender_name,
                         uin = sender_id,
                         content = [
