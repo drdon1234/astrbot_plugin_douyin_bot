@@ -42,7 +42,7 @@ class DouyinBotPlugin(Star):
                             ]
                         )
                     )
-            await event.send(event.plain_result("抖音bot为您服务 ٩( 'ω' )و"))
+            yield event.plain_result("抖音bot为您服务 ٩( 'ω' )و")
             await event.send(event.chain_result([Nodes(nodes)]))
         except Exception as e:
             print(f"处理消息时发生错误：{e}")
