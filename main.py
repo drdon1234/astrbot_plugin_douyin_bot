@@ -24,6 +24,8 @@ class DouyinBotPlugin(Star):
             sender_id = int(event.get_self_id()) or 10000
             for result in results:
                 if result and not isinstance(result, Exception):
+                    yield event.plain_result(f"标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
+                    yield event.plain_result(result['video_url'])
                     nodes.append(
                         Node(
                             name=sender_name,
