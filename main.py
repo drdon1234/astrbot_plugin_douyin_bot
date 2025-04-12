@@ -15,7 +15,7 @@ class DouyinBotPlugin(Star):
         print(event.message_str)
         direct_url = await self.parser.parse_urls(event.message_str)
         if direct_url:
-          uploader.Video.fromURL(direct_url)
+            uploader.Video.fromURL(direct_url)
         
     async def terminate(self):
         pass
