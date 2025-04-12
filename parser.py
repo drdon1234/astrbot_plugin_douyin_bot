@@ -5,23 +5,21 @@ import json
 from datetime import datetime
 
 class DouyinParser:
-    semaphore = asyncio.Semaphore(10)  # 类变量，所有实例共享
-
-    def __init__(self, session):
-        self.session = session
+    def __init__(self):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.0; SM-G955U Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36',
             'Referer': 'https://www.douyin.com/?is_from_mobile_home=1&recommend=1'
         }
+        self.semaphore = asyncio.Semaphore(10)
 
-    async def get_redirected_url(self, url):
-        async with self.session.head(url, allow_redirects=True) as response:
+    async def get_redirected_url(self, session, url):
+        async with session.head(url, allow_redirects=True) as response:
             return str(response.url)
 
-    async def fetch_video_info(self, video_id):
+    async def fetch_video_info(self, session, video_id):
         url = f'https://www.iesdouyin.com/share/video/{video_id}/'
         try:
-            async with self.session.get(url, headers=self.headers) as response:
+            async with session.get(url, headers=self.headers) as response:
                 response_text = await response.text()
                 data = re.findall(r'_ROUTER_DATA\s*=\s*(\{.*?\});', response_text)
                 if data:
@@ -44,13 +42,13 @@ class DouyinParser:
             print(f'请求错误：{e}')
             return None
 
-    async def parse(self, url):
-        async with self.semaphore:  # 使用类变量信号量
-            redirected_url = await self.get_redirected_url(url)
+    async def parse(self, session, url):
+        async with self.semaphore:
+            redirected_url = await self.get_redirected_url(session, url)
             match = re.search(r'(\d+)', redirected_url)
             if match:
                 video_id = match.group(1)
-                return await self.fetch_video_info(video_id)
+                return await self.fetch_video_info(session, video_id)
             else:
                 return None
 
@@ -60,32 +58,26 @@ class DouyinParser:
         video_links = re.findall(douyin_video_pattern, input_text)
         return video_links
 
-    async def parse_urls(self, urls):
-        tasks = [self.parse(url) for url in urls]
-        results = await asyncio.gather(*tasks)
-        return results
+    async def parse_urls(self, input_text):
+        urls = self.extract_video_links(input_text)
+        async with aiohttp.ClientSession() as session:
+            tasks = [self.parse(session, url) for url in urls]
+            results = await asyncio.gather(*tasks)
+
+            for url, result in zip(urls, results):
+                if result:
+                    print(f"URL: {url}")
+                    print(f"作者：{result['nickname']}")
+                    print(f"标题：{result['title']}")
+                    print(f"发布时间：{result['timestamp']}")
+                    print(f"视频直链：{result['video_url']}\n\n")
+                else:
+                    print(f"解析失败！URL: {url}")
 
 async def main():
-    input_text = """
-    9.71 a@a.nQ 02/11 Slp:/ # 肯恰那 https://v.douyin.com/5JJ_ZvXkGz0/ 复制此链接，打开Dou音搜索，直接观看视频！
-    https://www.douyin.com/video/7488299765604666682 https://v.douyin.com/t_ToZGLYIBk
-    """
-
-    urls = DouyinParser.extract_video_links(input_text)
-
-    async with aiohttp.ClientSession() as session:
-        parser = DouyinParser(session)
-        results = await parser.parse_urls(urls)
-
-        for url, result in zip(urls, results):
-            if result:
-                print(f"URL: {url}")
-                print(f"作者：{result['nickname']}")
-                print(f"标题：{result['title']}")
-                print(f"发布时间：{result['timestamp']}")
-                print(f"视频直链：{result['video_url']}\n\n")
-            else:
-                print(f"解析失败！URL: {url}")
+    input_text = "9.71 a@a.nQ 02/11 Slp:/ # 肯恰那  https://v.douyin.com/5JJ_ZvXkGz0/ 复制此链接，打开Dou音搜索，直接观看视频！ https://www.douyin.com/video/7488299765604666682 https://v.douyin.com/T_0KMeulp7A/  https://v.douyin.com/t_ToZGLYIBk"
+    parser = DouyinParser()
+    await parser.parse_urls(input_text)
 
 if __name__ == "__main__":
     asyncio.run(main())
