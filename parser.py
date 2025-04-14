@@ -30,12 +30,14 @@ class DouyinParser:
                     timestamp = datetime.fromtimestamp(item_list['create_time']).strftime('%Y-%m-%d')
                     video = item_list['video']['play_addr']['uri']
                     video_url = f'https://www.douyin.com/aweme/v1/play/?video_id={video}' if 'mp3' not in video else video
+                    images = [image['url_list'][0] for image in item_list.get('images', []) if 'url_list' in image]
                     return {
                         'nickname': nickname,
                         'title': title,
                         'timestamp': timestamp,
                         'raw_url': url,
-                        'video_url': video_url
+                        'video_url': video_url,
+                        'images': images
                     }
                 else:
                     return None
