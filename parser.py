@@ -121,7 +121,7 @@ class DouyinParser:
                         f'https://www.douyin.com/aweme/v1/play/?video_id={video}'
                     )
                     images = [image['url_list'][0] for image in item_list.get('images', []) if 'url_list' in image]
-                    is_gallery = False # len(images) > 0
+                    is_gallery = len(images) > 0
                     return {
                         'nickname': nickname,
                         'title': title,
