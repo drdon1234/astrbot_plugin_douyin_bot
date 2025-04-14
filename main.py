@@ -20,3 +20,7 @@ class DouyinBotPlugin(Star):
             return
         yield event.plain_result("抖音bot为您服务 ٩( 'ω' )و")
         await event.send(event.chain_result([Nodes(nodes)]))
+
+    @filter.command("抖音解析")
+    async def specified_parse(self, event: AstrMessageEvent):
+        pass
