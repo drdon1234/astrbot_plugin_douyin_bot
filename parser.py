@@ -81,9 +81,8 @@ class DouyinParser:
         web_matches = re.finditer(web_pattern, input_text)
         for match in web_matches:
             video_id = match.group(1)
-            standardized_url = f"https://www.douyin.com/video/{video_id}"  # 拼接标准格式
+            standardized_url = f"https://www.douyin.com/video/{video_id}"
             result_links.append(standardized_url)
-        print(result_links)
         return result_links
 
     async def parse(self, session, url):
@@ -122,7 +121,7 @@ class DouyinParser:
                         f'https://www.douyin.com/aweme/v1/play/?video_id={video}'
                     )
                     images = [image['url_list'][0] for image in item_list.get('images', []) if 'url_list' in image]
-                    is_gallery = len(images) > 0
+                    is_gallery = False # len(images) > 0
                     return {
                         'nickname': nickname,
                         'title': title,
