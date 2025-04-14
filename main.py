@@ -3,6 +3,7 @@ from astrbot.api.star import Context, Star, register
 from astrbot.api.message_components import Nodes
 from astrbot.core.star.filter.event_message_type import EventMessageType
 from .parser import DouyinParser
+import re
 
 @register("astrbot_plugin_douyin_bot", "drdon1234", "自动识别抖音链接并转换为视频直链", "1.0")
 class DouyinBotPlugin(Star):
@@ -14,19 +15,12 @@ class DouyinBotPlugin(Star):
     async def terminate(self):
         pass
 
-    async def parse(self, event: AstrMessageEvent):
+    @filter.event_message_type(EventMessageType.ALL)
+    async def auto_parse(self, event: AstrMessageEvent):
+        if not (self.is_auto_parse or bool(re.search(r'.?抖音解析', event.message_str))):
+            return
         nodes = await self.parser.build_nodes(event)
         if nodes is None:
             return
         await event.send(event.plain_result("抖音bot为您服务 ٩( 'ω' )و"))
         await event.send(event.chain_result([Nodes(nodes)]))
-    
-    @filter.event_message_type(EventMessageType.ALL)
-    async def auto_parse(self, event: AstrMessageEvent):
-        if self.is_auto_parse:
-            await self.parse(event)
-
-    @filter.command("抖音解析")
-    async def specified_parse(self, event: AstrMessageEvent):
-        await self.parse(event)
-
