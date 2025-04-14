@@ -74,14 +74,14 @@ class DouyinParser:
     @staticmethod
     async def extract_video_links(input_text):
         result_links = []
-        app_pattern = r'(?:https?:\/\/)?(?:www\.)?v\.douyin\.com\/[a-zA-Z0-9_\-]+\/?'
-        app_links = re.findall(app_pattern, input_text)
-        result_links.extend(app_links)
-        web_pattern = r'(?:https?:\/\/)?(?:www\.)?douyin\.com\/[^\s]*?(\d{19})[^\s]*'
+        mobile_pattern = r'https?://v\.douyin\.com/[^\s]+'
+        mobile_links = re.findall(mobile_pattern, input_text)
+        result_links.extend(mobile_links)
+        web_pattern = r'https?://(?:www\.)?douyin\.com/[^\s]*?(\d{19})[^\s]*'
         web_matches = re.finditer(web_pattern, input_text)
         for match in web_matches:
             video_id = match.group(1)
-            standardized_url = f"https://www.douyin.com/video/{video_id}"
+            standardized_url = f"https://www.douyin.com/video/{video_id}"  # 拼接标准格式
             result_links.append(standardized_url)
         return result_links
 
