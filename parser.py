@@ -16,12 +16,12 @@ class DouyinParser:
     async def build_nodes(self, event):
         try:
             input_text = event.message_str
-            sender_name = "抖音bot"
-            sender_id = int(event.get_self_id()) or 10000
-            urls = await self.extract_video_links(input_text)
+            urls = self.extract_video_links(input_text)
             if not urls:
                 return None
             nodes = []
+            sender_name = "抖音bot"
+            sender_id = int(event.get_self_id()) or 10000
             async with aiohttp.ClientSession() as session:
                 tasks = [self.parse(session, url) for url in urls]
                 results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -137,9 +137,3 @@ class DouyinParser:
         except aiohttp.ClientError as e:
             print(f'请求错误：{e}')
             return None
-
-    async def parse_urls(self, input_text):
-        urls = await self.extract_video_links(input_text)
-        async with aiohttp.ClientSession() as session:
-            tasks = [self.parse(session, url) for url in urls]
-            return await asyncio.gather(*tasks, return_exceptions=True)
