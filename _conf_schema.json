@@ -1,5 +1,5 @@
 {
-    "platform_type": {
+    "is_auto_parse": {
         "description": "是否自动解析抖音链接",
         "type": "bool",
         "hint": "",
