@@ -13,6 +13,94 @@ class DouyinParser:
         }
         self.semaphore = asyncio.Semaphore(10)
 
+    async def build_nodes(self, event):
+        try:
+            input_text = event.message_str
+            sender_name = "抖音bot"
+            sender_id = int(event.get_self_id()) or 10000
+            urls = await self.extract_video_links(input_text)
+            if not urls:
+                return None
+            nodes = []
+            async with aiohttp.ClientSession() as session:
+                tasks = [self.parse(session, url) for url in urls]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                for result in results:
+                    if result and not isinstance(result, Exception):
+                        nodes.append(
+                            Node(
+                                name=sender_name,
+                                uin=sender_id,
+                                content=[
+                                    Plain(f"标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
+                                ]
+                            )
+                        )
+                        if result['is_gallery']:
+                            gallery_node_content = []
+                            for image_url in result['images']:
+                                image_node = Node(
+                                    name=sender_name,
+                                    uin=sender_id,
+                                    content=[
+                                        Image.fromURL(image_url)
+                                    ]
+                                )
+                                gallery_node_content.append(image_node)
+                            parent_gallery_node = Node(
+                                name=sender_name,
+                                uin=sender_id,
+                                content=gallery_node_content
+                            )
+                            nodes.append(parent_gallery_node)
+                        else:
+                            video_node = Node(
+                                name=sender_name,
+                                uin=sender_id,
+                                content=[
+                                    Video.fromURL(result['video_url'])
+                                ]
+                            )
+                            nodes.append(video_node)
+            if not nodes:
+                return None
+            return nodes
+        except Exception as e:
+            print(f"构建节点时发生错误：{e}", flush=True)
+            import traceback
+            traceback.print_exc()
+            return None
+
+    @staticmethod
+    async def extract_video_links(input_text):
+        loop = asyncio.get_running_loop()
+        def _extract_links():
+            result_links = []
+            app_pattern = r'(?:https?:\/\/)?(?:www\.)?v\.douyin\.com\/\S+'
+            app_links = re.findall(app_pattern, input_text)
+            result_links.extend(app_links)
+            web_pattern = r'(?:https?:\/\/)?(?:www\.)?douyin\.com\/[^\s]*?(\d{19})[^\s]*'
+            web_matches = re.finditer(web_pattern, input_text)
+            for match in web_matches:
+                video_id = match.group(1)
+                standardized_url = f"https://www.douyin.com/video/{video_id}"
+                result_links.append(standardized_url)
+            return result_links
+        return await loop.run_in_executor(None, _extract_links)
+
+    async def parse(self, session, url):
+        async with self.semaphore:
+            try:
+                redirected_url = await self.get_redirected_url(session, url)
+                match = re.search(r'(\d+)', redirected_url)
+                if match:
+                    video_id = match.group(1)
+                    return await self.fetch_video_info(session, video_id)
+                else:
+                    return None
+            except aiohttp.ClientError as e:
+                return e
+
     async def get_redirected_url(self, session, url):
         async with session.head(url, allow_redirects=True) as response:
             return str(response.url)
@@ -50,100 +138,6 @@ class DouyinParser:
                     return None
         except aiohttp.ClientError as e:
             print(f'请求错误：{e}')
-            return None
-
-    async def parse(self, session, url):
-        async with self.semaphore:
-            try:
-                redirected_url = await self.get_redirected_url(session, url)
-                match = re.search(r'(\d+)', redirected_url)
-                if match:
-                    video_id = match.group(1)
-                    return await self.fetch_video_info(session, video_id)
-                else:
-                    return None
-            except aiohttp.ClientError as e:
-                return e
-
-    @staticmethod
-    async def extract_video_links(input_text):
-        loop = asyncio.get_running_loop()
-        
-        def _extract_links():
-            result_links = []
-            app_pattern = r'(?:https?:\/\/)?(?:www\.)?v\.douyin\.com\/\S+'
-            app_links = re.findall(app_pattern, input_text)
-            result_links.extend(app_links)
-            web_pattern = r'(?:https?:\/\/)?(?:www\.)?douyin\.com\/[^\s]*?(\d{19})[^\s]*'
-            web_matches = re.finditer(web_pattern, input_text)
-            for match in web_matches:
-                video_id = match.group(1)
-                standardized_url = f"https://www.douyin.com/video/{video_id}"
-                result_links.append(standardized_url)
-            return result_links
-        
-        return await loop.run_in_executor(None, _extract_links)
-
-    async def build_nodes(self, event):
-        try:
-            input_text = event.message_str
-            sender_name = "抖音bot"
-            sender_id = int(event.get_self_id()) or 10000
-            urls = await self.extract_video_links(input_text)
-            if not urls:
-                return None
-            nodes = []
-            async with aiohttp.ClientSession() as session:
-                tasks = [self.parse(session, url) for url in urls]
-                results = await asyncio.gather(*tasks, return_exceptions=True)
-                for result in results:
-                    if result and not isinstance(result, Exception):
-                        nodes.append(
-                            Node(
-                                name=sender_name,
-                                uin=sender_id,
-                                content=[
-                                    Plain(f"标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
-                                ]
-                            )
-                        )
-                        
-                        if result['is_gallery']:
-                            gallery_node_content = []
-                            for image_url in result['images']:
-                                image_node = Node(
-                                    name=sender_name,
-                                    uin=sender_id,
-                                    content=[
-                                        Image.fromURL(image_url)
-                                    ]
-                                )
-                                gallery_node_content.append(image_node)
-                            
-                            parent_gallery_node = Node(
-                                name=sender_name,
-                                uin=sender_id,
-                                content=gallery_node_content
-                            )
-                            
-                            nodes.append(parent_gallery_node)
-                        else:
-                            video_node = Node(
-                                name=sender_name,
-                                uin=sender_id,
-                                content=[
-                                    Video.fromURL(result['video_url'])
-                                ]
-                            )
-                            nodes.append(video_node)
-                if not nodes:
-                    return None
-                
-                return nodes
-        except Exception as e:
-            print(f"构建节点时发生错误：{e}", flush=True)
-            import traceback
-            traceback.print_exc()
             return None
 
     async def parse_urls(self, input_text):
