@@ -3,7 +3,7 @@ import asyncio
 import re
 import json
 from datetime import datetime
-from astrbot.api.message_components import Plain, Video, Node, Nodes
+from astrbot.api.message_components import Plain, Video, Image, Node, Nodes
 
 class DouyinParser:
     def __init__(self):
@@ -36,13 +36,15 @@ class DouyinParser:
                         f'https://www.douyin.com/aweme/v1/play/?video_id={video}'
                     )
                     images = [image['url_list'][0] for image in item_list.get('images', []) if 'url_list' in image]
+                    is_gallery = len(images) > 0
                     return {
                         'nickname': nickname,
                         'title': title,
                         'timestamp': timestamp,
                         'raw_url': url,
                         'video_url': video_url,
-                        'images': images
+                        'images': images,
+                        'is_gallery': is_gallery
                     }
                 else:
                     return None
@@ -64,26 +66,30 @@ class DouyinParser:
                 return e
 
     @staticmethod
-    def extract_video_links(input_text):
-        result_links = []
-        app_pattern = r'(?:https?:\/\/)?(?:www\.)?v\.douyin\.com\/\S+'
-        app_links = re.findall(app_pattern, input_text)
-        result_links.extend(app_links)
-        web_pattern = r'(?:https?:\/\/)?(?:www\.)?douyin\.com\/[^\s]*?(\d{19})[^\s]*'
-        web_matches = re.finditer(web_pattern, input_text)
-        for match in web_matches:
-            video_id = match.group(1)  # 只捕获19位数字ID
-            standardized_url = f"https://www.douyin.com/video/{video_id}"
-            result_links.append(standardized_url)
-        return result_links
-
+    async def extract_video_links(input_text):
+        loop = asyncio.get_running_loop()
+        
+        def _extract_links():
+            result_links = []
+            app_pattern = r'(?:https?:\/\/)?(?:www\.)?v\.douyin\.com\/\S+'
+            app_links = re.findall(app_pattern, input_text)
+            result_links.extend(app_links)
+            web_pattern = r'(?:https?:\/\/)?(?:www\.)?douyin\.com\/[^\s]*?(\d{19})[^\s]*'
+            web_matches = re.finditer(web_pattern, input_text)
+            for match in web_matches:
+                video_id = match.group(1)
+                standardized_url = f"https://www.douyin.com/video/{video_id}"
+                result_links.append(standardized_url)
+            return result_links
+        
+        return await loop.run_in_executor(None, _extract_links)
 
     async def build_nodes(self, event):
         try:
             input_text = event.message_str
             sender_name = "抖音bot"
             sender_id = int(event.get_self_id()) or 10000
-            urls = self.extract_video_links(input_text)
+            urls = await self.extract_video_links(input_text)
             if not urls:
                 return None
             nodes = []
@@ -101,15 +107,30 @@ class DouyinParser:
                                 ]
                             )
                         )
-                        nodes.append(
-                            Node(
-                                name=sender_name,
-                                uin=sender_id,
-                                content=[
-                                    Video.fromURL(result['video_url'])
-                                ]
+                        
+                        if result['is_gallery']:
+                            gallery_nodes = []
+                            for image_url in result['images']:
+                                gallery_nodes.append(
+                                    Node(
+                                        name=sender_name,
+                                        uin=sender_id,
+                                        content=[
+                                            Image.fromURL(image_url)
+                                        ]
+                                    )
+                                )
+                            nodes.append(Nodes(gallery_nodes))
+                        else:
+                            nodes.append(
+                                Node(
+                                    name=sender_name,
+                                    uin=sender_id,
+                                    content=[
+                                        Video.fromURL(result['video_url'])
+                                    ]
+                                )
                             )
-                        )
             if not nodes:
                 return None
             return nodes
@@ -118,7 +139,7 @@ class DouyinParser:
             return None
 
     async def parse_urls(self, input_text):
-        urls = self.extract_video_links(input_text)
+        urls = await self.extract_video_links(input_text)
         async with aiohttp.ClientSession() as session:
             tasks = [self.parse(session, url) for url in urls]
             return await asyncio.gather(*tasks, return_exceptions=True)
