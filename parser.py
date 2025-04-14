@@ -49,7 +49,6 @@ class DouyinParser:
             print(f'请求错误：{e}')
             return None
 
-
     async def parse(self, session, url):
         async with self.semaphore:
             try:
