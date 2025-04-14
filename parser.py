@@ -74,16 +74,13 @@ class DouyinParser:
             input_text = event.message_str
             sender_name = "抖音bot"
             sender_id = int(event.get_self_id()) or 10000
-            
             urls = self.extract_video_links(input_text)
             if not urls:
                 return None
-                
             nodes = []
             async with aiohttp.ClientSession() as session:
                 tasks = [self.parse(session, url) for url in urls]
                 results = await asyncio.gather(*tasks, return_exceptions=True)
-                
                 for result in results:
                     if result and not isinstance(result, Exception):
                         nodes.append(
@@ -104,10 +101,8 @@ class DouyinParser:
                                 ]
                             )
                         )
-                        
             if not nodes:
                 return None
-                
             return nodes
         except Exception as e:
             print(f"构建节点时发生错误：{e}")
