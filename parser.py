@@ -120,7 +120,6 @@ class DouyinParser:
                         video.split("video_id=")[-1] if video.startswith("https://") else
                         f'https://www.douyin.com/aweme/v1/play/?video_id={video}'
                     )
-                    images = [image['url_list'][0] for image in item_list.get('images', []) if 'url_list' in image]
                     images = [image['url_list'][0] for image in (item_list.get('images') or []) if 'url_list' in image]
                     is_gallery = len(images) > 0
                     return {
