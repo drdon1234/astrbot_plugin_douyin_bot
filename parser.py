@@ -72,7 +72,7 @@ class DouyinParser:
             return None
 
     @staticmethod
-    async def extract_video_links(input_text):
+    def extract_video_links(input_text):
         result_links = []
         mobile_pattern = r'https?://v\.douyin\.com/[^\s]+'
         mobile_links = re.findall(mobile_pattern, input_text)
@@ -83,6 +83,7 @@ class DouyinParser:
             video_id = match.group(1)
             standardized_url = f"https://www.douyin.com/video/{video_id}"  # 拼接标准格式
             result_links.append(standardized_url)
+        print(result_links)
         return result_links
 
     async def parse(self, session, url):
