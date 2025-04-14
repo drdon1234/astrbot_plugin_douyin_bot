@@ -109,39 +109,41 @@ class DouyinParser:
                         )
                         
                         if result['is_gallery']:
-                            gallery_nodes = []
+                            gallery_node_content = []
                             for image_url in result['images']:
-                                gallery_nodes.append(
-                                    Node(
-                                        name=sender_name,
-                                        uin=sender_id,
-                                        content=[
-                                            Image.fromURL(image_url)
-                                        ]
-                                    )
-                                )
-                            nodes.append(
-                                Node(
-                                    name=sender_name,
-                                    uin=sender_id,
-                                    content=Nodes(gallery_nodes)
-                                )
-                            )
-                        else:
-                            nodes.append(
-                                Node(
+                                image_node = Node(
                                     name=sender_name,
                                     uin=sender_id,
                                     content=[
-                                        Video.fromURL(result['video_url'])
+                                        Image.fromURL(image_url)
                                     ]
                                 )
+                                gallery_node_content.append(image_node)
+                            
+                            parent_gallery_node = Node(
+                                name=sender_name,
+                                uin=sender_id,
+                                content=gallery_node_content
                             )
-            if not nodes:
-                return None
-            return nodes
+                            
+                            nodes.append(parent_gallery_node)
+                        else:
+                            video_node = Node(
+                                name=sender_name,
+                                uin=sender_id,
+                                content=[
+                                    Video.fromURL(result['video_url'])
+                                ]
+                            )
+                            nodes.append(video_node)
+                if not nodes:
+                    return None
+                
+                return nodes
         except Exception as e:
-            print(f"构建节点时发生错误：{e}")
+            print(f"构建节点时发生错误：{e}", flush=True)
+            import traceback
+            traceback.print_exc()
             return None
 
     async def parse_urls(self, input_text):
