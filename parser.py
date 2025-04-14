@@ -120,7 +120,15 @@ class DouyinParser:
                                         ]
                                     )
                                 )
-                            nodes.append(Nodes(gallery_nodes))
+                            nodes.append(
+                                Node(
+                                    name=sender_name,
+                                    uin=sender_id,
+                                    content=[
+                                        Nodes(gallery_nodes)
+                                    ]
+                                )
+                            )
                         else:
                             nodes.append(
                                 Node(
