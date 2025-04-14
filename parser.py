@@ -65,9 +65,18 @@ class DouyinParser:
 
     @staticmethod
     def extract_video_links(input_text):
-        douyin_video_pattern = r'https?://(?:www\.|v\.)?douyin\.com/(?:video/\d+|[^\s]+)'
-        video_links = re.findall(douyin_video_pattern, input_text)
-        return video_links
+        result_links = []
+        app_pattern = r'(?:https?:\/\/)?(?:www\.)?v\.douyin\.com\/\S+'
+        app_links = re.findall(app_pattern, input_text)
+        result_links.extend(app_links)
+        web_pattern = r'(?:https?:\/\/)?(?:www\.)?douyin\.com\/[^\s]*?(\d{19})[^\s]*'
+        web_matches = re.finditer(web_pattern, input_text)
+        for match in web_matches:
+            video_id = match.group(1)  # 只捕获19位数字ID
+            standardized_url = f"https://www.douyin.com/video/{video_id}"
+            result_links.append(standardized_url)
+        return result_links
+
 
     async def build_nodes(self, event):
         try:
