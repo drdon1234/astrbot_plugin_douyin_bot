@@ -2,7 +2,7 @@
     "is_auto_parse": {
         "description": "是否自动解析抖音链接",
         "type": "bool",
-        "hint": "禁用后只能使用'抖音解析'关键字调用解析功能",
+        "hint": "禁用后解析链接请使用'抖音解析'关键字",
         "default": true
     }
 }
