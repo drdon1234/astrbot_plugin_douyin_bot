@@ -124,9 +124,7 @@ class DouyinParser:
                                 Node(
                                     name=sender_name,
                                     uin=sender_id,
-                                    content=[
-                                        Nodes(gallery_nodes)
-                                    ]
+                                    content=Nodes(gallery_nodes)
                                 )
                             )
                         else:
