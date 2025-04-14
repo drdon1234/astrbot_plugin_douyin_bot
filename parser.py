@@ -29,7 +29,11 @@ class DouyinParser:
                     title = item_list['desc']
                     timestamp = datetime.fromtimestamp(item_list['create_time']).strftime('%Y-%m-%d')
                     video = item_list['video']['play_addr']['uri']
-                    video_url = f'https://www.douyin.com/aweme/v1/play/?video_id={video}' if 'mp3' not in video else video
+                    video_url = (
+                        video if video.endswith(".mp3") else
+                        video.split("video_id=")[-1] if video.startswith("https://") else
+                        f'https://www.douyin.com/aweme/v1/play/?video_id={video}'
+                    )
                     images = [image['url_list'][0] for image in item_list.get('images', []) if 'url_list' in image]
                     return {
                         'nickname': nickname,
@@ -44,6 +48,7 @@ class DouyinParser:
         except aiohttp.ClientError as e:
             print(f'请求错误：{e}')
             return None
+
 
     async def parse(self, session, url):
         async with self.semaphore:
