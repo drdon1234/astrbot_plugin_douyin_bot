@@ -73,20 +73,17 @@ class DouyinParser:
 
     @staticmethod
     async def extract_video_links(input_text):
-        loop = asyncio.get_running_loop()
-        def _extract_links():
-            result_links = []
-            app_pattern = r'(?:https?:\/\/)?(?:www\.)?v\.douyin\.com\/\S+'
-            app_links = re.findall(app_pattern, input_text)
-            result_links.extend(app_links)
-            web_pattern = r'(?:https?:\/\/)?(?:www\.)?douyin\.com\/[^\s]*?(\d{19})[^\s]*'
-            web_matches = re.finditer(web_pattern, input_text)
-            for match in web_matches:
-                video_id = match.group(1)
-                standardized_url = f"https://www.douyin.com/video/{video_id}"
-                result_links.append(standardized_url)
-            return result_links
-        return await loop.run_in_executor(None, _extract_links)
+        result_links = []
+        app_pattern = r'(?:https?:\/\/)?(?:www\.)?v\.douyin\.com\/[a-zA-Z0-9_\-]+\/?'
+        app_links = re.findall(app_pattern, input_text)
+        result_links.extend(app_links)
+        web_pattern = r'(?:https?:\/\/)?(?:www\.)?douyin\.com\/[^\s]*?(\d{19})[^\s]*'
+        web_matches = re.finditer(web_pattern, input_text)
+        for match in web_matches:
+            video_id = match.group(1)
+            standardized_url = f"https://www.douyin.com/video/{video_id}"
+            result_links.append(standardized_url)
+        return result_links
 
     async def parse(self, session, url):
         async with self.semaphore:
