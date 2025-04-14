@@ -3,6 +3,7 @@ import asyncio
 import re
 import json
 from datetime import datetime
+from astrbot.api.message_components import Plain, Video, Node, Nodes
 
 class DouyinParser:
     def __init__(self):
@@ -68,22 +69,52 @@ class DouyinParser:
         video_links = re.findall(douyin_video_pattern, input_text)
         return video_links
 
+    async def build_nodes(self, event):
+        try:
+            input_text = event.message_str
+            sender_name = "抖音bot"
+            sender_id = int(event.get_self_id()) or 10000
+            
+            urls = self.extract_video_links(input_text)
+            if not urls:
+                return None
+                
+            nodes = []
+            async with aiohttp.ClientSession() as session:
+                tasks = [self.parse(session, url) for url in urls]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                
+                for result in results:
+                    if result and not isinstance(result, Exception):
+                        nodes.append(
+                            Node(
+                                name=sender_name,
+                                uin=sender_id,
+                                content=[
+                                    Plain(f"标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
+                                ]
+                            )
+                        )
+                        nodes.append(
+                            Node(
+                                name=sender_name,
+                                uin=sender_id,
+                                content=[
+                                    Video.fromURL(result['video_url'])
+                                ]
+                            )
+                        )
+                        
+            if not nodes:
+                return None
+                
+            return nodes
+        except Exception as e:
+            print(f"构建节点时发生错误：{e}")
+            return None
+
     async def parse_urls(self, input_text):
         urls = self.extract_video_links(input_text)
         async with aiohttp.ClientSession() as session:
             tasks = [self.parse(session, url) for url in urls]
             return await asyncio.gather(*tasks, return_exceptions=True)
-
-
-async def main():
-    input_text = "9.71 a@a.nQ 02/11 Slp:/ # 肯恰那  https://v.douyin.com/5JJ_ZvXkGz0/ 复制此链接，打开Dou音搜索，直接观看视频！ https://www.douyin.com/video/7488299765604666682 https://v.douyin.com/T_0KMeulp7A/  https://v.douyin.com/t_ToZGLYIBk"
-    parser = DouyinParser()
-    result = await parser.parse_urls(input_text)
-    print(f"URL: {url}")
-    print(f"作者：{result['nickname']}")
-    print(f"标题：{result['title']}")
-    print(f"发布时间：{result['timestamp']}")
-    print(f"视频直链：{result['video_url']}\n\n")
-
-if __name__ == "__main__":
-    asyncio.run(main())
