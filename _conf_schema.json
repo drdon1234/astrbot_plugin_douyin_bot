@@ -1,0 +1,8 @@
+{
+    "platform_type": {
+        "description": "是否自动解析抖音链接",
+        "type": "bool",
+        "hint": "",
+        "default": true
+    },
+}
