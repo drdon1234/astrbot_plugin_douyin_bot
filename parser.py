@@ -21,7 +21,12 @@ class DouyinParser:
                 return None
             nodes = []
             sender_name = "抖音bot"
-            sender_id = int(event.get_self_id()) or 10000
+            platform = event.get_platform_name()
+            if platform_name != "webchat":
+                try:
+                    sender_id = int(event.get_self_id())
+                except:
+                    sender_id = 10000
             async with aiohttp.ClientSession() as session:
                 tasks = [self.parse(session, url) for url in urls]
                 results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -71,7 +76,7 @@ class DouyinParser:
                                     ]
                                 )
                             else:
-                                # video_node = Video.fromURL(result['video_url'])
+                                video_node = Video.fromURL(result['video_url'])
                             nodes.append(video_node)
             if not nodes:
                 return None
