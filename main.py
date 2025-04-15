@@ -10,6 +10,7 @@ class DouyinBotPlugin(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
         self.is_auto_parse = config.get("is_auto_parse", True)
+        self.is_auto_pack = config.get("is_auto_pack", True)
         self.parser = DouyinParser()
 
     async def terminate(self):
@@ -19,7 +20,7 @@ class DouyinBotPlugin(Star):
     async def auto_parse(self, event: AstrMessageEvent):
         if not (self.is_auto_parse or bool(re.search(r'.?抖音解析', event.message_str))):
             return
-        nodes = await self.parser.build_nodes(event)
+        nodes = await self.parser.build_nodes(event, self.is_auto_pack)
         if nodes is None:
             return
         await event.send(event.plain_result("抖音bot为您服务 ٩( 'ω' )و"))
