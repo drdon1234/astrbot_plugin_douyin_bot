@@ -27,4 +27,5 @@ class DouyinBotPlugin(Star):
         if self.is_auto_pack:
             await event.send(event.chain_result([Nodes(nodes)]))
         else:
-            await event.send(event.chain_result(nodes))
+            for node in nodes:
+                await event.send(event.chain_result([node]))
