@@ -22,9 +22,10 @@ class DouyinParser:
             nodes = []
             sender_name = "抖音bot"
             platform = event.get_platform_name()
-            if platform_name != "webchat":
+            sender_id = event.get_self_id()
+            if platform != "webchat" and platform != "gewechat":
                 try:
-                    sender_id = int(event.get_self_id())
+                    sender_id = int(sender_id)
                 except:
                     sender_id = 10000
             async with aiohttp.ClientSession() as session:
