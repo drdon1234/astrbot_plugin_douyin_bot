@@ -24,4 +24,7 @@ class DouyinBotPlugin(Star):
         if nodes is None:
             return
         await event.send(event.plain_result("抖音bot为您服务 ٩( 'ω' )و"))
-        await event.send(event.chain_result([Nodes(nodes)]))
+        if self.is_auto_pack:
+            await event.send(event.chain_result([Nodes(nodes)]))
+        else:
+            await event.send(event.chain_result(nodes))
