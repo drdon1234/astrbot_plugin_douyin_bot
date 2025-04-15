@@ -13,7 +13,7 @@ class DouyinParser:
         }
         self.semaphore = asyncio.Semaphore(10)
 
-    async def build_nodes(self, event):
+    async def build_nodes(self, event, is_auto_pack):
         try:
             input_text = event.message_str
             urls = self.extract_video_links(input_text)
@@ -27,40 +27,51 @@ class DouyinParser:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
                 for result in results:
                     if result and not isinstance(result, Exception):
-                        nodes.append(
-                            Node(
+                        if is_auto_pack:
+                            text_node = Node(
                                 name=sender_name,
                                 uin=sender_id,
                                 content=[
                                     Plain(f"标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
                                 ]
                             )
-                        )
+                        else:
+                            text_node = Plain(f"标题：{result['title']}\n作者：{result['nickname']}\n发布时间：{result['timestamp']}")
+                        nodes.append(text_node)
                         if result['is_gallery']:
-                            gallery_node_content = []
-                            for image_url in result['images']:
-                                image_node = Node(
+                            if is_auto_pack:
+                                gallery_node_content = []
+                                for image_url in result['images']:
+                                    image_node = Node(
+                                        name=sender_name,
+                                        uin=sender_id,
+                                        content=[
+                                            Image.fromURL(image_url)
+                                        ]
+                                    )
+                                    gallery_node_content.append(image_node)
+                                parent_gallery_node = Node(
+                                    name=sender_name,
+                                    uin=sender_id,
+                                    content=gallery_node_content
+                                )
+                                nodes.append(parent_gallery_node)
+                            else:
+                                for image_url in result['images']:
+                                    nodes.append(
+                                        Image.fromURL(image_url)
+                                    )
+                        else:
+                            if is_auto_pack:
+                                video_node = Node(
                                     name=sender_name,
                                     uin=sender_id,
                                     content=[
-                                        Image.fromURL(image_url)
+                                        Video.fromURL(result['video_url'])
                                     ]
                                 )
-                                gallery_node_content.append(image_node)
-                            parent_gallery_node = Node(
-                                name=sender_name,
-                                uin=sender_id,
-                                content=gallery_node_content
-                            )
-                            nodes.append(parent_gallery_node)
-                        else:
-                            video_node = Node(
-                                name=sender_name,
-                                uin=sender_id,
-                                content=[
-                                    Video.fromURL(result['video_url'])
-                                ]
-                            )
+                            else
+                                video_node = Video.fromURL(result['video_url'])
                             nodes.append(video_node)
             if not nodes:
                 return None
