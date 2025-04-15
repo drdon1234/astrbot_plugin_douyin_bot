@@ -71,7 +71,7 @@ class DouyinParser:
                                     ]
                                 )
                             else:
-                                video_node = Video.fromURL(result['video_url'])
+                                # video_node = Video.fromURL(result['video_url'])
                             nodes.append(video_node)
             if not nodes:
                 return None
