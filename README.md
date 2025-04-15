@@ -62,7 +62,12 @@ https://github.com/drdon1234/astrbot_plugin_douyin_bot
 
 ## 开发中的功能
 - 随机视频
-  
+
+---
+
+## 已知 BUG
+- 微信无法正确推送视频消息（疑似AstrBot本身问题）
+
 ---
 ## 鸣谢
 
