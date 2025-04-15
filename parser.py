@@ -77,7 +77,7 @@ class DouyinParser:
                                     ]
                                 )
                             else:
-                                video_node = Video.fromURL(result['video_url'])
+                                video_node = Video.fromURL(result['video_url'], thumb_url=result['thumb_url'])
                             nodes.append(video_node)
             if not nodes:
                 return None
@@ -128,10 +128,11 @@ class DouyinParser:
                 if data:
                     json_data = json.loads(data[0])
                     item_list = json_data['loaderData']['video_(id)/page']['videoInfoRes']['item_list'][0]
-                    nickname = item_list['author']['nickname']
                     title = item_list['desc']
+                    nickname = item_list['author']['nickname']
                     timestamp = datetime.fromtimestamp(item_list['create_time']).strftime('%Y-%m-%d')
                     video = item_list['video']['play_addr']['uri']
+                    thumb_url = item_list['video']['cover']['url_list'][0]
                     video_url = (
                         video if video.endswith(".mp3") else
                         video.split("video_id=")[-1] if video.startswith("https://") else
@@ -140,10 +141,11 @@ class DouyinParser:
                     images = [image['url_list'][0] for image in (item_list.get('images') or []) if 'url_list' in image]
                     is_gallery = len(images) > 0
                     return {
-                        'nickname': nickname,
+                        # 'raw_url': url,
                         'title': title,
+                        'nickname': nickname,
                         'timestamp': timestamp,
-                        'raw_url': url,
+                        'thumb_url': thumb_url,
                         'video_url': video_url,
                         'images': images,
                         'is_gallery': is_gallery
