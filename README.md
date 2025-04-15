@@ -14,14 +14,10 @@
 
 使用前请先安装以下依赖库：
 - aiohttp
-- pyffmpeg (可选，AstrBot处理gewechat视频消息的依赖库)
 
 在您的终端输入以下命令并回车：
 ```
 pip install aiohttp
-```
-```
-pip install pyffmpeg
 ```
 
 ### 插件安装
