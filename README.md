@@ -66,8 +66,9 @@ https://github.com/drdon1234/astrbot_plugin_douyin_bot
 ---
 
 ## 已知 BUG
-- 微信无法正确推送视频消息（疑似AstrBot本身问题）
-
+- 微信无法正确推送视频消息（疑似AstrBot消息处理问题）
+- QQ无法以单独发送的形式推送多个图片消息（疑似Napcat消息处理问题）
+  
 ---
 ## 鸣谢
 
