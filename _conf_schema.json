@@ -4,5 +4,11 @@
         "type": "bool",
         "hint": "",
         "default": true
+    },
+    "is_auto_pack": {
+        "description": "是否将解析结果打包为消息集合",
+        "type": "bool",
+        "hint": "gewechat平台使用请关闭",
+        "default": true
     }
 }
