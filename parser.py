@@ -13,6 +13,108 @@ class DouyinParser:
         }
         self.semaphore = asyncio.Semaphore(10)
 
+    def extract_router_data(self, text):
+        start_flag = 'window._ROUTER_DATA = '
+        start_idx = text.find(start_flag)
+        if start_idx == -1:
+            return None
+        brace_start = text.find('{', start_idx)
+        if brace_start == -1:
+            return None
+        i = brace_start
+        stack = []
+        while i < len(text):
+            if text[i] == '{':
+                stack.append('{')
+            elif text[i] == '}':
+                stack.pop()
+                if not stack:
+                    return text[brace_start:i+1]
+            i += 1
+        return None
+
+    async def fetch_video_info(self, session, video_id):
+        url = f'https://www.iesdouyin.com/share/video/{video_id}/'
+        try:
+            async with session.get(url, headers=self.headers) as response:
+                response_text = await response.text()
+                json_str = self.extract_router_data(response_text)
+                if not json_str:
+                    print('未找到 _ROUTER_DATA')
+                    return None
+                json_str = json_str.replace('\\u002F', '/').replace('\\/', '/')
+                try:
+                    json_data = json.loads(json_str)
+                except Exception as e:
+                    print('JSON解析失败', e)
+                    return None
+                loader_data = json_data.get('loaderData', {})
+                video_info = None
+                for v in loader_data.values():
+                    if isinstance(v, dict) and 'videoInfoRes' in v:
+                        video_info = v['videoInfoRes']
+                        break
+                if not video_info or 'item_list' not in video_info or not video_info['item_list']:
+                    print('未找到视频信息')
+                    return None
+                item_list = video_info['item_list'][0]
+                title = item_list['desc']
+                nickname = item_list['author']['nickname']
+                timestamp = datetime.fromtimestamp(item_list['create_time']).strftime('%Y-%m-%d')
+                thumb_url = item_list['video']['cover']['url_list'][0]
+                video = item_list['video']['play_addr']['uri']
+                if video.endswith('.mp3'):
+                    video_url = video
+                elif video.startswith('https://'):
+                    video_url = video
+                else:
+                    video_url = f'https://www.douyin.com/aweme/v1/play/?video_id={video}'
+                images = [img['url_list'][0] for img in (item_list.get('images') or []) if 'url_list' in img]
+                is_gallery = len(images) > 0
+                return {
+                    'title': title,
+                    'nickname': nickname,
+                    'timestamp': timestamp,
+                    'thumb_url': thumb_url,
+                    'video_url': video_url,
+                    'images': images,
+                    'is_gallery': is_gallery
+                }
+        except aiohttp.ClientError as e:
+            print(f'请求错误：{e}')
+            return None
+
+    async def get_redirected_url(self, session, url):
+        async with session.head(url, allow_redirects=True) as response:
+            return str(response.url)
+
+    async def parse(self, session, url):
+        async with self.semaphore:
+            try:
+                redirected_url = await self.get_redirected_url(session, url)
+                match = re.search(r'(\d+)', redirected_url)
+                if match:
+                    video_id = match.group(1)
+                    return await self.fetch_video_info(session, video_id)
+                else:
+                    return None
+            except aiohttp.ClientError as e:
+                return e
+
+    @staticmethod
+    def extract_video_links(input_text):
+        result_links = []
+        mobile_pattern = r'https?://v\.douyin\.com/[^\s]+'
+        mobile_links = re.findall(mobile_pattern, input_text)
+        result_links.extend(mobile_links)
+        web_pattern = r'https?://(?:www\.)?douyin\.com/[^\s]*?(\d{19})[^\s]*'
+        web_matches = re.finditer(web_pattern, input_text)
+        for match in web_matches:
+            video_id = match.group(1)
+            standardized_url = f"https://www.douyin.com/video/{video_id}"
+            result_links.append(standardized_url)
+        return result_links
+
     async def build_nodes(self, event, is_auto_pack):
         try:
             input_text = event.message_str
@@ -86,72 +188,4 @@ class DouyinParser:
             print(f"构建节点时发生错误：{e}", flush=True)
             import traceback
             traceback.print_exc()
-            return None
-
-    @staticmethod
-    def extract_video_links(input_text):
-        result_links = []
-        mobile_pattern = r'https?://v\.douyin\.com/[^\s]+'
-        mobile_links = re.findall(mobile_pattern, input_text)
-        result_links.extend(mobile_links)
-        web_pattern = r'https?://(?:www\.)?douyin\.com/[^\s]*?(\d{19})[^\s]*'
-        web_matches = re.finditer(web_pattern, input_text)
-        for match in web_matches:
-            video_id = match.group(1)
-            standardized_url = f"https://www.douyin.com/video/{video_id}"
-            result_links.append(standardized_url)
-        return result_links
-
-    async def parse(self, session, url):
-        async with self.semaphore:
-            try:
-                redirected_url = await self.get_redirected_url(session, url)
-                match = re.search(r'(\d+)', redirected_url)
-                if match:
-                    video_id = match.group(1)
-                    return await self.fetch_video_info(session, video_id)
-                else:
-                    return None
-            except aiohttp.ClientError as e:
-                return e
-
-    async def get_redirected_url(self, session, url):
-        async with session.head(url, allow_redirects=True) as response:
-            return str(response.url)
-
-    async def fetch_video_info(self, session, video_id):
-        url = f'https://www.iesdouyin.com/share/video/{video_id}/'
-        try:
-            async with session.get(url, headers=self.headers) as response:
-                response_text = await response.text()
-                data = re.findall(r'_ROUTER_DATA\s*=\s*(\{.*?\});', response_text)
-                if data:
-                    json_data = json.loads(data[0])
-                    item_list = json_data['loaderData']['video_(id)/page']['videoInfoRes']['item_list'][0]
-                    title = item_list['desc']
-                    nickname = item_list['author']['nickname']
-                    timestamp = datetime.fromtimestamp(item_list['create_time']).strftime('%Y-%m-%d')
-                    video = item_list['video']['play_addr']['uri']
-                    thumb_url = item_list['video']['cover']['url_list'][0]
-                    video_url = (
-                        video if video.endswith(".mp3") else
-                        video.split("video_id=")[-1] if video.startswith("https://") else
-                        f'https://www.douyin.com/aweme/v1/play/?video_id={video}'
-                    )
-                    images = [image['url_list'][0] for image in (item_list.get('images') or []) if 'url_list' in image]
-                    is_gallery = len(images) > 0
-                    return {
-                        # 'raw_url': url,
-                        'title': title,
-                        'nickname': nickname,
-                        'timestamp': timestamp,
-                        'thumb_url': thumb_url,
-                        'video_url': video_url,
-                        'images': images,
-                        'is_gallery': is_gallery
-                    }
-                else:
-                    return None
-        except aiohttp.ClientError as e:
-            print(f'请求错误：{e}')
             return None
