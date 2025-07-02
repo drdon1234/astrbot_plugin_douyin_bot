@@ -5,7 +5,7 @@ from astrbot.core.star.filter.event_message_type import EventMessageType
 from .parser import DouyinParser
 import re
 
-@register("astrbot_plugin_douyin_bot", "drdon1234", "自动识别抖音链接并转换为直链发送", "1.2")
+@register("astrbot_plugin_douyin_bot", "drdon1234", "自动识别抖音链接并转换为直链发送", "1.3")
 class DouyinBotPlugin(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
