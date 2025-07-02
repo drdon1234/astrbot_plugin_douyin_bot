@@ -12,7 +12,6 @@ class DouyinParser:
             'Referer': 'https://www.douyin.com/?is_from_mobile_home=1&recommend=1'
         }
         self.semaphore = asyncio.Semaphore(10)
-        self.default_timeout = aiohttp.ClientTimeout(total=10)  # 10秒超时
 
     def extract_router_data(self, text):
         start_flag = 'window._ROUTER_DATA = '
@@ -37,7 +36,7 @@ class DouyinParser:
     async def fetch_video_info(self, session, video_id):
         url = f'https://www.iesdouyin.com/share/video/{video_id}/'
         try:
-            async with session.get(url, headers=self.headers, timeout=10) as response:
+            async with session.get(url, headers=self.headers) as response:
                 response_text = await response.text()
                 json_str = self.extract_router_data(response_text)
                 if not json_str:
@@ -81,23 +80,13 @@ class DouyinParser:
                     'images': images,
                     'is_gallery': is_gallery
                 }
-        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+        except aiohttp.ClientError as e:
             print(f'请求错误：{e}')
-            return None
-        except Exception as e:
-            print(f'未知错误：{e}')
             return None
 
     async def get_redirected_url(self, session, url):
-        try:
-            async with session.head(url, allow_redirects=True, timeout=10) as response:
-                return str(response.url)
-        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-            print(f'重定向请求错误：{e}')
-            return url
-        except Exception as e:
-            print(f'重定向未知错误：{e}')
-            return url
+        async with session.head(url, allow_redirects=True) as response:
+            return str(response.url)
 
     async def parse(self, session, url):
         async with self.semaphore:
@@ -109,12 +98,8 @@ class DouyinParser:
                     return await self.fetch_video_info(session, video_id)
                 else:
                     return None
-            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-                print(f'解析请求错误：{e}')
-                return None
-            except Exception as e:
-                print(f'解析未知错误：{e}')
-                return None
+            except aiohttp.ClientError as e:
+                return e
 
     @staticmethod
     def extract_video_links(input_text):
@@ -145,14 +130,11 @@ class DouyinParser:
                     sender_id = int(sender_id)
                 except:
                     sender_id = 10000
-            async with aiohttp.ClientSession(timeout=self.default_timeout) as session:
+            async with aiohttp.ClientSession() as session:
                 tasks = [self.parse(session, url) for url in urls]
                 results = await asyncio.gather(*tasks, return_exceptions=True)
                 for result in results:
-                    if isinstance(result, Exception):
-                        print(f"解析时发生异常：{result}")
-                        continue
-                    if result:
+                    if result and not isinstance(result, Exception):
                         if is_auto_pack:
                             text_node = Node(
                                 name=sender_name,
