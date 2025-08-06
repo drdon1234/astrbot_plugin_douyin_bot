@@ -125,7 +125,7 @@ class DouyinParser:
             sender_name = "抖音bot"
             platform = event.get_platform_name()
             sender_id = event.get_self_id()
-            if platform != "webchat" and platform != "gewechat":
+            if platform != "wechatpadpro" and platform != "webchat" and platform != "gewechat":
                 try:
                     sender_id = int(sender_id)
                 except:
